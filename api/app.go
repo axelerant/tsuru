@@ -467,6 +467,7 @@ func runCommand(w http.ResponseWriter, r *http.Request, t auth.Token) error {
 	}
 	appName := r.URL.Query().Get(":app")
 	once := r.URL.Query().Get("once")
+	interactive := r.URL.Query().Get("interactive")
 	rec.Log(u.Email, "run-command", "app="+appName, "command="+string(c))
 	app, err := getApp(appName, u, r)
 	if err != nil {
@@ -475,7 +476,7 @@ func runCommand(w http.ResponseWriter, r *http.Request, t auth.Token) error {
 	keepAliveWriter := tsuruIo.NewKeepAliveWriter(w, 30*time.Second, "")
 	defer keepAliveWriter.Stop()
 	writer := &tsuruIo.SimpleJsonMessageEncoderWriter{Encoder: json.NewEncoder(keepAliveWriter)}
-	err = app.Run(string(c), writer, once == "true")
+	err = app.Run(string(c), writer, once == "true", interactive == "false")
 	if err != nil {
 		writer.Encode(tsuruIo.SimpleJsonMessage{Error: err.Error()})
 		return err
