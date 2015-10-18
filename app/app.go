@@ -803,7 +803,7 @@ func (app *App) InstanceEnv(name string) map[string]bind.EnvVar {
 
 // Run executes the command in app units, sourcing apprc before running the
 // command.
-func (app *App) Run(cmd string, w io.Writer, once bool) error {
+func (app *App) Run(cmd string, w io.Writer, once bool, interactive bool) error {
 	if !app.Available() {
 		return stderr.New("App must be available to run commands")
 	}
@@ -811,19 +811,23 @@ func (app *App) Run(cmd string, w io.Writer, once bool) error {
 	logWriter := LogWriter{App: app, Source: "app-run"}
 	logWriter.Async()
 	defer logWriter.Close()
-	return app.sourced(cmd, io.MultiWriter(w, &logWriter), once)
+	return app.sourced(cmd, io.MultiWriter(w, &logWriter), once, interactive)
 }
 
-func (app *App) sourced(cmd string, w io.Writer, once bool) error {
+func (app *App) sourced(cmd string, w io.Writer, once bool, interactive bool) error {
 	source := "[ -f /home/application/apprc ] && source /home/application/apprc"
 	cd := fmt.Sprintf("[ -d %s ] && cd %s", defaultAppDir, defaultAppDir)
 	cmd = fmt.Sprintf("%s; %s; %s", source, cd, cmd)
-	return app.run(cmd, w, once)
+	return app.run(cmd, w, once, interactive)
 }
 
-func (app *App) run(cmd string, w io.Writer, once bool) error {
+func (app *App) run(cmd string, w io.Writer, once bool, interactive bool) error {
 	if once {
-		return Provisioner.ExecuteCommandOnce(w, w, app, cmd)
+		if interactive {
+			return Provisioner.ExecuteCommandOnce(w, w, app, cmd, "-i", "-t")
+		} else {
+			return Provisioner.ExecuteCommandOnce(w, w, app, cmd)
+		}
 	}
 	return Provisioner.ExecuteCommand(w, w, app, cmd)
 }
