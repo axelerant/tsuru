@@ -2160,7 +2160,7 @@ func (s *S) TestRun(c *check.C) {
 	defer s.provisioner.Destroy(&app)
 	s.provisioner.AddUnits(&app, 1, "web", nil)
 	var buf bytes.Buffer
-	err := app.Run("ls -lh", &buf, false)
+	err := app.Run("ls -lh", &buf, false, false)
 	c.Assert(err, check.IsNil)
 	c.Assert(buf.String(), check.Equals, "a lot of files")
 	expected := "[ -f /home/application/apprc ] && source /home/application/apprc;"
@@ -2198,7 +2198,7 @@ func (s *S) TestRunOnce(c *check.C) {
 	defer s.provisioner.Destroy(&app)
 	s.provisioner.AddUnits(&app, 1, "web", nil)
 	var buf bytes.Buffer
-	err := app.Run("ls -lh", &buf, true)
+	err := app.Run("ls -lh", &buf, true, false)
 	c.Assert(err, check.IsNil)
 	c.Assert(buf.String(), check.Equals, "a lot of files")
 	expected := "[ -f /home/application/apprc ] && source /home/application/apprc;"
